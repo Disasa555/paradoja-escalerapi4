@@ -5,10 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>La paradoja de Pi = 4</title>
 <style>
+  :root {
+    --bg: #0f172a;
+    --panel: #1e293b;
+    --text: #f8fafc;
+    --accent: #3b82f6;
+    --red: #ef4444;
+    --green: #10b981;
+    --grid: #334155;
+  }
   body {
     font-family: 'Segoe UI', system-ui, sans-serif;
-    background-color: #0f172a;
-    color: #f8fafc;
+    background-color: var(--bg);
+    color: var(--text);
     margin: 0;
     display: flex;
     flex-direction: column;
@@ -16,116 +25,177 @@
     min-height: 100vh;
   }
   header { text-align: center; padding: 2rem 1rem 1rem; }
-  h1 { margin: 0 0 0.5rem; color: #3b82f6; }
+  h1 { margin: 0 0 0.5rem; color: var(--accent); }
   p.sub { margin: 0; color: #94a3b8; max-width: 600px; }
   
-  .container {
+  .main-container {
     display: flex;
     flex-wrap: wrap;
     gap: 2rem;
     justify-content: center;
     padding: 1rem;
-    max-width: 800px;
-    align-items: center;
+    max-width: 1000px;
   }
 
   .canvas-container {
-    background: #1e293b;
+    background: var(--panel);
     padding: 1rem;
     border-radius: 12px;
     box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
 
-  canvas { display: block; background: #fff; border-radius: 4px; }
+  canvas { display: block; border-radius: 4px; background: #fff; }
+  #graphCanvas { background: var(--panel); }
 
   .controls {
-    background: #1e293b;
+    background: var(--panel);
     padding: 1.5rem;
     border-radius: 12px;
     width: 100%;
-    max-width: 350px;
+    max-width: 500px;
     display: flex;
     flex-direction: column;
     gap: 1rem;
+    margin-top: 1rem;
   }
 
   .row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+  input[type=range] { flex: 1; cursor: pointer; }
   
-  /* ARREGLO: Aseguramos que el slider tenga espacio y la etiqueta un ancho fijo */
-  input[type=range] { flex: 1; cursor: pointer; min-width: 0; }
-  #stepsLabel { min-width: 2ch; text-align: right; font-variant-numeric: tabular-nums; }
-  
+  button {
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.2s;
+  }
+  button:hover { filter: brightness(1.2); }
+  button.active { background: var(--green); }
+
   .stats {
     display: grid;
-    grid-template-columns: 1fr;
-    gap: 1rem;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
     margin-top: 1rem;
   }
   .stat {
     background: #0f172a;
-    padding: 1rem;
+    padding: 0.75rem 0.5rem;
     border-radius: 8px;
+    text-align: center;
     border: 1px solid #334155;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
   }
-  .stat span { color: #94a3b8; font-size: 0.9rem; }
-  .stat strong { font-size: 1.2rem; font-variant-numeric: tabular-nums; }
-  .stat.sq strong { color: #3b82f6; }
-  .stat.circ strong { color: #ef4444; }
+  .stat span { display: block; font-size: 0.65rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.25rem; }
+  .stat strong { font-size: 1.1rem; font-variant-numeric: tabular-nums; }
+  .stat.stairs strong { color: var(--accent); }
+  .stat.circ strong { color: var(--red); }
+  .stat.dev strong { color: var(--green); }
 </style>
 </head>
 <body>
 
 <header>
   <h1>La paradoja de &pi; = 4</h1>
-  <p class="sub">Empieza con un cuadrado rodeando el círculo. Corta las esquinas infinitamente. El perímetro siempre será 4.</p>
+  <p class="sub">Corta las esquinas del cuadrado infinitamente. La forma se vuelve un círculo (la desviación cae a 0), pero el perímetro se queda atascado en 4.</p>
 </header>
 
-<div class="container">
+<div class="main-container">
+  <!-- Lienzo del círculo -->
   <div class="canvas-container">
-    <canvas id="c" width="350" height="350"></canvas>
+    <canvas id="c" width="400" height="400"></canvas>
   </div>
   
-  <div class="controls">
-    <div class="row">
-      <label for="steps">Cortes:</label>
-      <input type="range" id="steps" min="0" max="7" value="0" step="1">
-      <strong id="stepsLabel">1</strong>
-    </div>
+  <!-- Lienzo de la gráfica matemática -->
+  <div class="canvas-container">
+    <canvas id="graphCanvas" width="400" height="400"></canvas>
+  </div>
+</div>
 
-    <div class="stats">
-      <div class="stat sq">
-        <span>Perímetro cuadrado/escalera:</span>
-        <strong id="lengthLabel">4.0000</strong>
-      </div>
-      <div class="stat circ">
-        <span>Longitud del círculo (&pi;):</span>
-        <strong>3.1415</strong>
-      </div>
+<div class="controls">
+  <div class="row">
+    <label for="steps">Cortes:</label>
+    <input type="range" id="steps" min="0" max="100" value="0" step="1">
+    <strong id="stepsLabel">1</strong>
+  </div>
+  
+  <div class="row">
+    <button id="playBtn">▶ Autoplay</button>
+    <button id="toggleAreaBtn">Mostrar Área</button>
+  </div>
+
+  <div class="stats">
+    <div class="stat stairs">
+      <span>Perímetro (4)</span>
+      <strong>4.0000</strong>
+    </div>
+    <div class="stat circ">
+      <span>Círculo (&pi;)</span>
+      <strong>3.1415</strong>
+    </div>
+    <div class="stat dev">
+      <span>Desviación</span>
+      <strong id="devLabel">0.5000</strong>
     </div>
   </div>
 </div>
 
 <script>
+  // Configuración para pantallas de alta resolución (Retina)
+  const dpr = window.devicePixelRatio || 1;
+  
   const canvas = document.getElementById('c');
   const ctx = canvas.getContext('2d');
+  const graphCanvas = document.getElementById('graphCanvas');
+  const gCtx = graphCanvas.getContext('2d');
+
+  // Ajustar resolución de los lienzos
+  [canvas, graphCanvas].forEach(cv => {
+    cv.width = 400 * dpr;
+    cv.height = 400 * dpr;
+    cv.style.width = '400px';
+    cv.style.height = '400px';
+  });
+  ctx.scale(dpr, dpr);
+  gCtx.scale(dpr, dpr);
+  
   const slider = document.getElementById('steps');
   const stepsLabel = document.getElementById('stepsLabel');
+  const devLabel = document.getElementById('devLabel');
+  const playBtn = document.getElementById('playBtn');
+  const toggleAreaBtn = document.getElementById('toggleAreaBtn');
 
-  const CX = canvas.width / 2;
-  const CY = canvas.height / 2;
-  const R = 120;
+  // Coordenadas del círculo
+  const CX = 200;
+  const CY = 200;
+  const R = 140;
 
-  function draw() {
-    const level = parseInt(slider.value, 10);
-    const N = Math.pow(2, level); 
+  let isPlaying = false;
+  let showArea = false;
+  let playInterval;
+
+  function getN() {
+    return Math.max(1, Math.round(Math.pow(2, slider.value / 10)));
+  }
+
+  // Cálculo de la desviación (distancia máxima entre la escalera y el círculo)
+  function getDeviation(N) {
+    // Distancia desde el centro hasta la línea recta del escalón
+    return R * (1 - Math.cos(Math.PI / (4 * N)));
+  }
+
+  function drawStaircase() {
+    const N = getN();
+    stepsLabel.textContent = N;
+    // Mostramos la desviación real
+    devLabel.textContent = (getDeviation(N) / R).toFixed(4); // Normalizado a 1
     
-    // ARREGLO: Solo mostramos el número para que no colapse el diseño
-    stepsLabel.textContent = N; 
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, 400, 400);
 
     // 1. Círculo de referencia (rojo)
     ctx.strokeStyle = '#ef4444';
@@ -134,9 +204,9 @@
     ctx.arc(CX, CY, R, 0, Math.PI * 2);
     ctx.stroke();
 
-    // 2. Escalera/Cuadrado (azul)
+    // 2. Escalera (azul)
     ctx.strokeStyle = '#3b82f6';
-    ctx.lineWidth = Math.max(1, 4 - level * 0.5);
+    ctx.lineWidth = Math.max(1, 5 - Math.log10(N));
     ctx.lineJoin = 'miter';
 
     ctx.beginPath();
@@ -152,7 +222,6 @@
       ctx.lineTo(x1, y2);
       ctx.lineTo(x2, y2);
     }
-
     // Q2
     for (let i = 0; i < N; i++) {
       let a1 = Math.PI/2 + i * (Math.PI / (2 * N));
@@ -163,7 +232,6 @@
       ctx.lineTo(x2, y1);
       ctx.lineTo(x2, y2);
     }
-
     // Q3
     for (let i = 0; i < N; i++) {
       let a1 = Math.PI + i * (Math.PI / (2 * N));
@@ -174,7 +242,6 @@
       ctx.lineTo(x1, y2);
       ctx.lineTo(x2, y2);
     }
-
     // Q4
     for (let i = 0; i < N; i++) {
       let a1 = 1.5 * Math.PI + i * (Math.PI / (2 * N));
@@ -186,11 +253,148 @@
       ctx.lineTo(x2, y2);
     }
 
+    if (showArea) {
+      ctx.fillStyle = 'rgba(59, 130, 246, 0.2)';
+      ctx.fill();
+    }
     ctx.stroke();
   }
 
-  slider.addEventListener('input', draw);
-  draw();
+  function drawGraph() {
+    gCtx.clearRect(0, 0, 400, 400);
+    
+    const margin = 50;
+    const graphW = 400 - margin * 2;
+    const graphH = 400 - margin * 2;
+
+    // Dibujar cuadrícula y ejes
+    gCtx.strokeStyle = '#334155';
+    gCtx.lineWidth = 1;
+    gCtx.font = '11px sans-serif';
+    gCtx.fillStyle = '#64748b';
+    gCtx.textAlign = 'right';
+    gCtx.textBaseline = 'middle';
+
+    // Eje Y (0 a 4.5)
+    for (let i = 0; i <= 4; i++) {
+      const y = 400 - margin - (i / 4.5) * graphH;
+      gCtx.beginPath();
+      gCtx.moveTo(margin, y);
+      gCtx.lineTo(400 - margin, y);
+      gCtx.stroke();
+      gCtx.fillText(i.toString(), margin - 8, y);
+    }
+
+    // Eje X (Escala logarítmica de N: 1 a 1024)
+    gCtx.textAlign = 'center';
+    gCtx.textBaseline = 'top';
+    for (let i = 0; i <= 3; i++) {
+      const x = margin + (i / 3) * graphW;
+      gCtx.beginPath();
+      gCtx.moveTo(x, margin);
+      gCtx.lineTo(x, 400 - margin);
+      gCtx.stroke();
+      gCtx.fillText(Math.pow(2, i*3.33).toFixed(0), x, 400 - margin + 8);
+    }
+    
+    gCtx.fillText('N (Cortes)', 400 - margin, 400 - margin + 25);
+
+    // Función para graficar
+    function plot(fn, color, width) {
+      gCtx.strokeStyle = color;
+      gCtx.lineWidth = width;
+      gCtx.beginPath();
+      for (let i = 0; i <= 100; i++) {
+        const n = Math.pow(2, i / 10);
+        const x = margin + (i / 100) * graphW;
+        const val = fn(n);
+        const y = 400 - margin - (val / 4.5) * graphH; 
+        if (i === 0) gCtx.moveTo(x, y);
+        else gCtx.lineTo(x, y);
+      }
+      gCtx.stroke();
+    }
+
+    // Graficar líneas (Desviación x10 para que sea visible)
+    plot(n => 4, '#3b82f6', 2);                      // Perímetro
+    plot(n => Math.PI, '#ef4444', 2);                // Círculo
+    plot(n => (getDeviation(n) / R) * 10, '#10b981', 2); // Desviación x10
+
+    // Indicador de posición actual (Línea vertical punteada)
+    const currentN = getN();
+    const currentX = margin + (slider.value / 100) * graphW;
+    
+    gCtx.strokeStyle = '#94a3b8';
+    gCtx.setLineDash([4, 4]);
+    gCtx.beginPath();
+    gCtx.moveTo(currentX, margin);
+    gCtx.lineTo(currentX, 400 - margin);
+    gCtx.stroke();
+    gCtx.setLineDash([]); // Quitar punteado
+
+    // Dibujar los puntos actuales
+    const points = [
+      { val: 4, color: '#3b82f6' },
+      { val: Math.PI, color: '#ef4444' },
+      { val: (getDeviation(currentN) / R) * 10, color: '#10b981' }
+    ];
+
+    points.forEach(p => {
+      const y = 400 - margin - (p.val / 4.5) * graphH;
+      gCtx.fillStyle = p.color;
+      gCtx.beginPath();
+      gCtx.arc(currentX, y, 4, 0, Math.PI * 2);
+      gCtx.fill();
+    });
+
+    // Leyenda
+    gCtx.textAlign = 'left';
+    gCtx.textBaseline = 'middle';
+    gCtx.fillStyle = '#3b82f6'; gCtx.fillRect(margin + 5, 10, 10, 10);
+    gCtx.fillStyle = '#94a3b8'; gCtx.fillText('Perímetro', margin + 20, 15);
+    
+    gCtx.fillStyle = '#ef4444'; gCtx.fillRect(margin + 90, 10, 10, 10);
+    gCtx.fillStyle = '#94a3b8'; gCtx.fillText('Círculo', margin + 105, 15);
+
+    gCtx.fillStyle = '#10b981'; gCtx.fillRect(margin + 160, 10, 10, 10);
+    gCtx.fillStyle = '#94a3b8'; gCtx.fillText('Desviación (x10)', margin + 175, 15);
+  }
+
+  function update() {
+    drawStaircase();
+    drawGraph();
+  }
+
+  slider.addEventListener('input', update);
+  
+  playBtn.addEventListener('click', () => {
+    isPlaying = !isPlaying;
+    if (isPlaying) {
+      playBtn.textContent = '⏸ Pausa';
+      playBtn.classList.add('active');
+      playInterval = setInterval(() => {
+        let val = parseInt(slider.value) + 1;
+        if (val > 100) val = 0;
+        slider.value = val;
+        update();
+      }, 100);
+    } else {
+      playBtn.textContent = '▶ Autoplay';
+      playBtn.classList.remove('active');
+      clearInterval(playInterval);
+    }
+  });
+
+  toggleAreaBtn.addEventListener('click', () => {
+    showArea = !showArea;
+    toggleAreaBtn.textContent = showArea ? 'Ocultar Área' : 'Mostrar Área';
+    toggleAreaBtn.classList.toggle('active', showArea);
+    update();
+  });
+
+  // Iniciar
+  update();
 </script>
+
 </body>
 </html>
